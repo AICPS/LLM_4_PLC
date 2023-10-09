@@ -1,0 +1,45 @@
+DATA_BLOCK "state" // Variables in DATA_BLOCK are global, and carry over between cycles
+VAR
+    state: Int;
+    historyFlag: Bool;
+    selected: Int;
+END_VAR
+BEGIN
+    state := 1; // Init values in BEGIN block!
+END_DATA_BLOCK
+
+ORGANIZATION_BLOCK "Main"
+VAR 
+    intermediate: Int; // Variables in ORGANIZATION_BLOCK are local, and are reset every cycle (temporary)
+END_VAR
+VAR CONSTANT // Constants are global, and carry over between cycles, immutable
+    stateA: Int := 0;
+    stateB: Int := 1;
+    stateC: Int := 2;
+END_VAR
+BEGIN
+    CASE "state".state OF // Refer to DATA_BLOCK with quotes
+        #stateA:
+            "output channel A" := TRUE; // Refer to I/O with quotes
+            "output channel B" := FALSE; 
+            IF "input channel 1" <= 3 THEN // Refer to I/O with quotes, channel 1 is an int
+                "state".state := #stateB;
+            END_IF;
+        #stateB:
+            "output channel A" := TRUE;
+            "output channel B" := TRUE;
+            IF "input channel 1" >= 7  THEN // Refer to I/O with quotes, channel 1 is an int
+                "state".state := #stateC;
+            END_IF;
+        #stateC:
+            "output channel A" := FALSE;
+            "output channel B" := FALSE;
+            IF "input channel 1"=8 THEN // Notice the single "=" for comparison
+                "state".state := #stateA;
+            ELSIF "input channel 2" THEN // Refer to I/O with quotes, channel 2 is a bool
+                "state".state := #stateB;
+            END_IF;
+        ELSE
+            "state".state := #stateC;
+    END_CASE;
+END_ORGANIZATION_BLOCK

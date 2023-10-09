@@ -1,0 +1,56 @@
+[IN/OUT DESCRIPTIONS]:
+    [START_IO]
+        [FORMAT]:
+        "NAME"                  "TYPE"  "ADDRESS"   "DESCRIPTION"
+        [IN]:
+        "RED BTN"               "Bool"  "%I0.0"     "Red Button"
+        "HB ARM REF BACK"       "Bool"  "%I1.0"     "reference switch cantilever back"
+        "HB ARM REF FRONT"      "Bool"  "%I1.7"     "reference switch cantilever front"
+        "HB REF HORIZ"          "Bool"  "%I3.0"     "HB REF HORIZONTAL"
+        "HB HORIZ IMPULSE2"     "Bool"  "%I2.3"     "encoder horizontal axis impulse 2"
+        "HB HORIZ IMPULSE1"     "Bool"  "%I3.4"     "encoder horizontal axis impulse 1"
+        "HB VERT IMPULSE2"      "Bool"  "%I3.5"     "encoder vertical axis impulse 2" 
+        "HB VERT IMPULSE1"      "Bool"  "%I3.6"     "encoder vertical axis impulse 1"
+        "BLACK BTN"             "Bool"  "%I3.7"     "Black Button"
+        "HB REF VERT"	        "Bool"  "%I3.3"     "Reference switch vertical axis"
+        [OUT]:
+        "HB HORIZ MOTOR POS"    "Bool"	"%Q3.2"     "Q3:motor horizontal to the shelf"
+        "HB HORIZ MOTOR NEG"	"Bool"	"%Q3.3"     "Q4:motor motor horizontal to the conveyor belt"
+        "HB VERT MOTOR POS"	    "Bool"	"%Q3.4"     "Q5:motor vertical axis down"
+        "HB VERT MOTOR NEG"	    "Bool"	"%Q3.5"     "Q6:motor vertical axis up"
+        "HB MOTOR ARM FRONT"	"Bool"	"%Q3.6"     "Q7:motor cantilever forward"
+        "HB MOTOR ARM BACK"	    "Bool"	"%Q3.7"     "Q8:motor cantilever backward"
+    [END_IO]
+[OPERATION DESCRIPTION]:
+    The Highbay contains 9 shelves arranged in a 3x3 matrix. Each shelf holds a component that the arm can lift.
+    The arm can move in the horizontal and vertical axis. The arm can also move forward and backward.
+    Horizontal axis is controlled by "HB HORIZ MOTOR POS" and "HB HORIZ MOTOR NEG".
+    Horizontal axis is equipped with a two phase encoder. The encoder is connected to "HB HORIZ IMPULSE2" and "HB HORIZ POS IMPULSE1". The encoder is used to determine the position of the arm.
+    Horizontal axis has a reference switch "HB REF HORIZ" that is used to determine the home position of the arm. xpos = 0 is the home position. I.E. when "HB REF HORIZ"=1 then xpos = 0.
+    Vertical axis is controlled by "HB VERT MOTOR POS" and "HB VERT MOTOR NEG".
+    Vertical axis is equipped with a two phase encoder. The encoder is connected to "HB VERT IMPULSE2" and "HB VERT IMPULSE1". The encoder is used to determine the position of the arm.
+    Vertical axis has a reference switch "HB REF VERT" that is used to determine the home position of the arm. ypos = 0 is the home position. I.E. when "HB REF VERT"=1 then ypos = 0.
+    The arm is controlled by "HB MOTOR ARM FRONT" and "HB MOTOR ARM BACK".
+    The arm is equipped with two reference switches "HB ARM REF FRONT" and "HB ARM REF BACK". i.e. when "HB ARM REF FRONT"=1 then arm is in the front/extended position. i.e. when "HB ARM REF BACK"=1 then arm is in the back/retracted position.
+    The offsets are as follows:
+        ROW1X = 734
+        ROW2X = 1315
+        ROW3X = 1900
+        COL1Y = 70
+        COL2Y = 405
+        COL3Y = 800
+        lift_offset = 40
+    e.g to lift a component from ROW1 COL2 the arm must travel to (734, 405), extend the arm, lift the component by lift_offset, retract the arm, and return to the home position.
+    THE XY POSITION OF THE ARM CANNOT EXCEED THE BOUNDARIES OF THE SHELVES.
+    To lift a component the arm must travel to the shelf (row_i, column_j), extend the arm, lift the component by lift_offset, retract the arm, and return to the home position.
+    To place a component the arm must travel to the shelf (row_i, column_j + offset), extend the arm, lower the component by lift_offset, retract the arm, and return to the home position.
+    The arm can only lift one component at a time.
+    The arm can only place one component at a time.
+    The arm can move simultaneously along the X, Y axis while holding a component or while empty.
+    The arm must always be retracted before moving along the X, Y axis.
+    The Encoder Impulse Pair is used to detect the direction of the movement: A positive edge on Impulse1 While Impulse2 is low indicates a positive movement. A positive edge on Impulse2 While Impulse1 is low indicates a negative movement.
+[TASK]:
+    When the user presses the red button, the arm travels to ROW1 COL2, lifts the component and travels to the home position.
+    When the user presses the black button, the arm travels to ROW3 COL1, lifts the component and travels to the home position.
+    Button presses while operating are ignored.
+    When the user presses any button while holding a component, the arm travels to the component's home cell, places it and returns to the home position.

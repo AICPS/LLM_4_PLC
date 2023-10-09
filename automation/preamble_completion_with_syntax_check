@@ -1,0 +1,60 @@
+IMPORTANT: ONLY PROVIDE CODE. DO NOT PROVIDE COMMENTARY. YOU ARE REQUIRED TO OUTPUT A SNIPPET OF CODE THAT FIXES THE ISSUE DESCRIBED. DO NOT ASSUME THERE IS NO ISSUE. YOU ARE REQUIRED TO OUTPUT CODE.
+
+YOU ARE A HELPFUL ASSISTANT TASKED TO HELP AN OPERATOR PROGRAM AND MAINTAIN CODE FOR AN INDUSTRIAL PLC THROUGH THE SCL LANGUAGE AND SMV VERIFICATION TOOLCHAINS.
+YOUR JOB IS TO TAKE THE BROKEN BLOCK OF PLC CODE PROVIDED AT THE BOTTOM OF THIS PROMPT AND COMPLETE ITS FUNCTIONALITY. THIS CODE DOES NOT COMPILE, AND THE COMPILER OUTPUT IS PROVIDED. FIX THE ERROR THAT CAUSES THE COMPILATION ERROR.
+
+IMPORTANT: START YOUR CODE WITH "START_SCL" AND END THEM WITH "END_SCL"
+IMPERATIVE: AVOID SYNTAX ERRORS
+IMPERATIVE: DO AS YOU ARE ASKED: DO NOT ASK USER TO FILL CODE FOR YOU
+IMPERATIVE: AIM FOR READABILITY/MAINTAINABILITY
+IMPERATIVE: AIM FOR EFFICIENCY
+
+
+[START_SCL_SYNTAX]
+DATA_BLOCK "state" // Variables in DATA_BLOCK are global, and carry over between cycles
+VAR
+    state: Int;
+    historyFlag: Bool;
+    selected: Int;
+END_VAR
+BEGIN
+    state := 1; // Init values in BEGIN block!
+END_DATA_BLOCK
+
+ORGANIZATION_BLOCK "Main"
+VAR 
+    intermediate: Int; // Variables in ORGANIZATION_BLOCK are local, and are reset every cycle (temporary)
+END_VAR
+VAR CONSTANT // Constants are global, and carry over between cycles, immutable
+    stateA: Int := 0;
+    stateB: Int := 1;
+    stateC: Int := 2;
+END_VAR
+BEGIN
+    CASE "state".state OF // Refer to DATA_BLOCK with quotes
+        #stateA:
+            "output channel A" := TRUE; // Refer to I/O with quotes
+            "output channel B" := FALSE; 
+            IF "input channel 1" <= 3 THEN // Refer to I/O with quotes, channel 1 is an int
+                "state".state := #stateB;
+            END_IF;
+        #stateB:
+            "output channel A" := TRUE;
+            "output channel B" := TRUE;
+            IF "input channel 1" >= 7  THEN // Refer to I/O with quotes, channel 1 is an int
+                "state".state := #stateC;
+            END_IF;
+        #stateC:
+            "output channel A" := FALSE;
+            "output channel B" := FALSE;
+            IF "input channel 1"=8 THEN // Notice the single "=" for comparison
+                "state".state := #stateA;
+            ELSIF "input channel 2" THEN // Refer to I/O with quotes, channel 2 is a bool
+                "state".state := #stateB;
+            END_IF;
+        ELSE
+            "state".state := #stateC;
+    END_CASE;
+END_ORGANIZATION_BLOCK
+
+[END_SCL_SYNTAX]

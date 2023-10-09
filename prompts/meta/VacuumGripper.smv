@@ -1,0 +1,125 @@
+MODULE VG_Data(B_start, B_stop)
+VAR
+    holding : boolean;
+    
+    Xpos : integer;
+    Ypos : integer;
+    Angle : integer;
+    targetXpos : integer;
+    targetYpos : integer;
+    targetAngle : integer;
+
+    state: {idle, move_to_white, at_white, lift, mps, stretch_arm, drop, retract, home};
+
+DEFINE
+    targetAngle_toWhite := 444;
+    targetX_atWhite := 406;
+    targetY_atWhite := 728;
+    targetY_lift := 0;
+    targetX_lift := 0;
+    targetAngle_mps := 878;
+    targetX_stretch_arm := 898;
+    targetY_drop := 527;
+    targetX_retract := 0;
+    targetY_retract := 0;
+    targetAngle_home := 0;
+
+
+
+ASSIGN
+    init(holding) := FALSE;
+    next(holding) := 
+        case
+            state = move_to_white : TRUE;
+            state = stretch_arm : TRUE;
+            state = lift : TRUE;
+            state = mps : TRUE;
+            TRUE : FALSE;
+        esac;
+
+    init(Xpos) := 0;
+    init(Ypos) := 0;
+    init(Angle) := 0;
+
+    init(targetXpos) := 0;
+    next(targetXpos) := 
+
+        case
+            state = idle & B_start & !holding : 0;
+            state = move_to_white : 0;
+            state = at_white : targetX_atWhite;
+            state = lift : targetX_lift;
+            state = stretch_arm : targetX_stretch_arm;
+            state = retract : targetX_retract;
+            TRUE : targetXpos;
+        esac;
+
+    init(targetYpos) := 0;
+    next(targetYpos) := 
+        case
+            state = idle & B_start & !holding : 0;
+            state = move_to_white : 0;
+	    state = at_white : targetY_atWhite;
+            state = lift : targetY_lift;
+            state = drop : targetY_drop;
+            state = retract : targetY_retract;
+            TRUE : targetYpos;
+        esac;
+
+    init(targetAngle) := targetAngle_toWhite;
+    next(targetAngle) :=
+        case
+            state = idle & B_start & !holding : targetAngle_toWhite;
+            state = move_to_white : targetAngle_toWhite;
+            state = mps : targetAngle_mps;
+            state = home : targetAngle_home;
+            TRUE : targetAngle;
+        esac;
+
+    init(state) := idle;
+    next(state) :=
+        case
+            state = idle & B_stop & !holding : idle;
+            state = idle & B_start & !holding & (Angle < targetAngle_toWhite) : move_to_white;
+            state = move_to_white & (Angle = targetAngle_toWhite) & (Xpos < targetX_atWhite & Ypos < targetY_atWhite) : at_white;
+            state = at_white & (Angle = targetAngle_toWhite) & (Xpos < targetX_atWhite & Ypos < targetY_atWhite) : at_white;
+            state = at_white & (Xpos = targetX_atWhite) & (Ypos = targetY_atWhite) : lift;
+            state = lift & (Ypos > targetY_lift) & (Xpos > targetX_lift) : lift;
+            state = lift & (Ypos = targetY_lift) & (Xpos = targetX_lift) & (Angle < targetAngle_mps) : mps;
+            state = mps & (Angle < targetAngle_mps) : mps;
+            state = mps & (Angle = targetAngle_mps) & (Xpos < targetX_stretch_arm) : stretch_arm;
+            state = stretch_arm & (Xpos < targetX_stretch_arm) : stretch_arm;
+            state = stretch_arm & (Xpos = targetX_stretch_arm) & (Ypos < targetY_drop) : drop; 
+            state = drop & Ypos < targetY_drop : drop;
+            state = drop & Ypos = targetY_drop : retract;
+            state = retract & (Xpos > targetX_retract & Ypos > targetY_retract) : retract;
+            state = retract & Ypos = targetY_retract & Xpos = targetX_retract : home;
+            state = home & (Angle > targetAngle_home) : home;
+            state = home & (Angle = targetAngle_home) : idle;
+            TRUE : state;
+        esac;
+
+TRANS
+    case
+        Xpos < targetXpos : next(Xpos)=Xpos+1;
+        Xpos > targetXpos : next(Xpos)=Xpos - 1;
+        TRUE : next(Xpos)=Xpos;
+    esac;
+TRANS
+    case
+        Ypos < targetYpos : next(Ypos)=Ypos+1;
+        Ypos > targetYpos : next(Ypos)=Ypos - 1;
+        TRUE : next(Ypos)=Ypos;
+    esac;
+TRANS
+    case
+        Angle < targetAngle : next(Angle)=Angle+1;
+        Angle > targetAngle : next(Angle)=Angle - 1;
+        TRUE : next(Angle)=Angle;
+    esac;
+
+
+
+MODULE main
+VAR
+    VG : VG_Data(TRUE, FALSE);

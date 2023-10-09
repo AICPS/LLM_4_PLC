@@ -1,0 +1,59 @@
+[IN/OUT DESCRIPTIONS]:
+    [START_IO]
+        [FORMAT]:
+            "NAME"                                       "TYPE"  "ADDRESS"   "DESCRIPTION"
+        [IN]:
+            "VG ENCODER HORIZONTAL AXIS IMPULSE 1"       "Bool"  "%I2.5"     "vg horizontal axis motor, encoder 1 pulse signal"
+            "VG ENCODER HORIZONTAL AXIS IMPULSE 2"       "Bool"  "%I2.6"     "vg encoder 2 pulse signal for the horizontal motor" 
+            "VG ENCODER ROTATE IMPULSE 2"		         "Bool"  "%I0.7"     "vacuum gripper 2nd encoder signal for rotation motor"
+            "VG ENCODER ROTATE IMPULSE 1"	             "Bool"  "%I2.7"     "vg encoder 1 signal for rotation motor"
+            "VG ENCODER VERTICAL AXIS IMPULSE 1"         "Bool"  "%I2.3"     "vg encoder 1 signal for the vertical motor"
+            "VG ENCODER VERTICAL AXIS IMPULSE 2"	     "Bool"  "%I2.4"     "vg encoder 2 signal for the vertical motor"
+            "VG REF SWITCH HORIZONTAL AXIS"		         "Bool"  "%I2.1"	 "vg reference switch signal for when the crane is completly back"
+            "VG REF SWITCH ROTATE"			             "Bool"  "%I2.2"     "vacuum gripper reference switch for when crane is rotated fully clockwise"
+            "VG REF SWITCH VERTICAL AXIS"                "Bool"  "%I2.0"     "vg reference switch signal for the crane at the top of the y axis"
+	    [OUT]:
+            "VG COMPRESSOR SIGNAL FOR THE VACUUM"        "Bool"  "%Q2.6"     "vg compressor signal for the vacuum"
+            "VG MOTOR HORIZONTAL AXIS BACKWARDS"	     "Bool"  "%Q2.2"	 "vg motor signal for moving the x axis backwards"
+            "VG MOTOR HORIZONTAL AXIS FORWARD"	         "Bool"  "%Q2.3"	 "vg motor signal for moving the x axis forward"
+            "VG MOTOR ROTATE CLOCKWISE"	     	         "Bool"  "%Q2.4"	 "vg rotation motor signal for moving clockwise"
+            "VG MOTOR ROTATE COUNTER CLOCKWISE"	         "Bool"  "%Q2.5"     "vg motor signal for rotating the crane counter clockwise"
+            "VG MOTOR VERTICAL AXIS DOWN"		         "Bool"  "%Q2.1"	 "vg motor for y axis moving down"
+            "VG MOTOR VERTICAL AXIS UP"		             "Bool"  "%Q2.0"     "vg motor signal for moving the crane up"
+            "VG VACUUM"				                     "Bool"  "%Q2.7"     "vg vacuum valve signal"
+    [END_IO]
+[OPERATION DESCRIPTION]
+    The vacuum gripper is powered by three encoder motors.
+    The vacuum gripper's arm can move in the horizontal axis, in and out.
+    The vacuum gripper can move the arm vertically, up and down.
+    The vacuum gripper can rotate the arm, clockwise and counter clockwise.
+    The horizontal axis is controlled by "VG MOTOR HORIZONTAL AXIS FORWARD" and "VG MOTOR HORIZONTAL AXIS BACKWARDS".
+    The horizontal axis is equipped with a two phase encoder. The encoder is connected to the "VG ENCODER HORIZONTAL AXIS IMPULSE 1" and "VG ENCODER HORIZONTAL AXIS IMPULSE 2".  The encoder is used to determine the position of the arm. 
+    The horizontal axis has a reference switch "VG REF SWITCH HORIZONTAL AXIS" that is used to determine the home position of the arm. xpos = 0 is the home position. I.E. when "VG REF SWITCH HORIZONTAL AXIS"=1 then xpos = 0.
+    The vertical axis is controlled by "VG MOTOR VERTICAL AXIS UP" and "VG MOTOR VERTICAL AXIS DOWN".
+    The vertical axis is equipped with a two phase encoder. The encoder is connected to the "VG ENCODER VERTICAL AXIS IMPULSE 1" and "VG ENCODER VERTICAL AXIS IMPULSE 2".  The encoder is used to determine the position of the arm. 
+    The vertical axis has a reference switch "VG REF SWITCH VERTICAL AXIS" that is used to determine the home position of the arm. ypos = 0 is the home position. I.E. when "VG REF SWITCH VERTICAL AXIS"=1 then ypos = 0.
+    The arm's rotation is controlled by "VG MOTOR ROTATE CLOCKWISE" and "VG MOTOR ROTATE COUNTER CLOCKWISE".
+    The arm's rotation is equipped with a two phase encoder. The encoder is connected to "VG ENCODER ROTATE IMPULSE 1" and "VG ENCODER ROTATE IMPULSE 2". The encoder is used to determine the direction of rotation of the arm.
+    The arm's rotation has a reference switch "VG REF SWITCH ROTATE" that is used to determine the home position of the arm. pos=0 is the home position. I.E. when "VG REF SWITCH ROTATE"=1 then pos=0.
+    The offsets are as follows:
+	BLUE_BLOCK = 300
+	RED_BLOCK = 385
+	WHITE_BLOCK = 400
+	MPS = 300
+	HB = 1350
+    e.g. to lift a component from BLUE_BLOCK, the arm must extend vertically, extend horizontally, and then rotate by the offset, 300.
+    To then move the BLUE_BLOCK to MPS, the arm must retract horizontally, rotate to WHITE_BLOCK, and then rotate to MPS.
+    Starting from the home position, to lift a component and then move it to MPS, the arm must travel to a block's offset, by extending arm vertically, then extending arm horizontally, and then rotating to the block's location by the offset. 
+    Then the arm will lift the component, rotate to the MPS by the offset, and the lower itself to drop the block at the MPS.
+    The arm can only lift one component at a time.
+    The arm can only place one component at a time.
+    The arm cannot move horizontally, vertically, or rotate at the same time while holding a component or while empty.
+    The Encoder Impulse Pair is used to detect the direction of the movement: A positive edge on Impulse1 While Impulse2 is low indicates a positive movement. A positive edge on Impulse2 While Impulse1 is low indicates a negative movement.
+[TASK]:
+    The arm will start at home position. When the user presses the red button, the arm travels to BLUE_BLOCK, lifts the component and travels to WHITE_BLOCK. 
+    The arm will then travel from the WHITE_BLOCK to the MPS, lower itself, and then drops the component.
+    The arm returns to home position.
+    Button presses while operating are ignored.
+      	
+    
